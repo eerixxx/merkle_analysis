@@ -555,20 +555,29 @@
             });
 
             // Assign purchases to users
+            // Only count COMPLETED purchases for volume
             purchasesData.forEach(purchase => {
                 if (purchase.buyer_id && userMapById.has(purchase.buyer_id)) {
                     const user = userMapById.get(purchase.buyer_id);
                     user.purchases.push(purchase);
-                    user.directVolume += parseFloat(purchase.amount_usdt) || 0;
+                    // Only add to volume if payment is COMPLETED
+                    if (purchase.payment_status === 'COMPLETED') {
+                        user.directVolume += parseFloat(purchase.amount_usdt) || 0;
+                    }
                 }
             });
 
-            // Assign earnings to users (to_user_id is the recipient)
+            // Assign earnings to users (recipient_id is the recipient)
+            // Only count WITHDRAWN earnings for total
             earningsData.forEach(earning => {
-                if (earning.to_user_id && userMapById.has(earning.to_user_id)) {
-                    const user = userMapById.get(earning.to_user_id);
+                const recipientId = earning.recipient_id || earning.to_user_id;
+                if (recipientId && userMapById.has(recipientId)) {
+                    const user = userMapById.get(recipientId);
                     user.earnings.push(earning);
-                    user.totalEarnings += parseFloat(earning.amount_usdt) || 0;
+                    // Only add to totalEarnings if status is WITHDRAWN
+                    if (earning.status === 'WITHDRAWN') {
+                        user.totalEarnings += parseFloat(earning.amount_usdt) || 0;
+                    }
                 }
             });
 
@@ -722,12 +731,13 @@
                 <div class="info-section">
                     <h3>💰 Financial Overview</h3>
                     <div class="info-grid">
-                        <div class="info-item"><strong>Direct Volume:</strong> $${user.directVolume.toFixed(2)}</div>
+                        <div class="info-item"><strong>Direct Volume (COMPLETED):</strong> $${user.directVolume.toFixed(2)}</div>
                         <div class="info-item"><strong>Team Volume:</strong> $${user.teamVolume.toFixed(2)}</div>
                         <div class="info-item"><strong>Team Contribution:</strong> $${(user.teamVolume - user.directVolume).toFixed(2)}</div>
-                        <div class="info-item"><strong>Total Purchases:</strong> ${user.purchases.length}</div>
-                        <div class="info-item"><strong>Total Earnings:</strong> $${user.totalEarnings.toFixed(2)}</div>
-                        <div class="info-item"><strong>Earnings Records:</strong> ${user.earnings.length}</div>
+                        <div class="info-item"><strong>Purchases (COMPLETED):</strong> ${user.purchases.filter(p => p.payment_status === 'COMPLETED').length}</div>
+                        <div class="info-item"><strong>Purchases (PENDING):</strong> ${user.purchases.filter(p => p.payment_status === 'PENDING').length}</div>
+                        <div class="info-item"><strong>Earnings (WITHDRAWN):</strong> $${user.totalEarnings.toFixed(2)}</div>
+                        <div class="info-item"><strong>Earnings (PENDING):</strong> $${user.earnings.filter(e => e.status === 'PENDING').reduce((sum, e) => sum + (parseFloat(e.amount_usdt) || 0), 0).toFixed(2)}</div>
                     </div>
                 </div>
 
@@ -809,7 +819,7 @@
                                     📅 ${e.created_at}
                                 </div>
                                 <div style="font-size: 0.85em; margin-top: 3px;">
-                                    Status: <span style="color: ${e.payment_status === 'WITHDRAWN' ? '#28a745' : '#ffc107'}; font-weight: bold;">${e.payment_status}</span>
+                                    Status: <span style="color: ${e.status === 'WITHDRAWN' ? '#28a745' : '#ffc107'}; font-weight: bold;">${e.status}</span>
                                 </div>
                                 ${e.from_user_id ? `<div style="font-size: 0.85em; opacity: 0.6;">From: ${fromUser?.username || `User ${e.from_user_id}`}</div>` : ''}
                             </div>
@@ -839,9 +849,15 @@
         }
 
         function updateStats() {
-            const totalPurchases = purchasesData.length;
-            const totalVolume = purchasesData.reduce((sum, p) => sum + (parseFloat(p.amount_usdt) || 0), 0);
-            const totalEarnings = earningsData.reduce((sum, e) => sum + (parseFloat(e.amount_usdt) || 0), 0);
+            // Only count COMPLETED purchases
+            const completedPurchases = purchasesData.filter(p => p.payment_status === 'COMPLETED');
+            const totalPurchases = completedPurchases.length;
+            const totalVolume = completedPurchases.reduce((sum, p) => sum + (parseFloat(p.amount_usdt) || 0), 0);
+            
+            // Only count WITHDRAWN earnings
+            const withdrawnEarnings = earningsData.filter(e => e.status === 'WITHDRAWN');
+            const totalEarnings = withdrawnEarnings.reduce((sum, e) => sum + (parseFloat(e.amount_usdt) || 0), 0);
+            
             const rootUsers = getRootUsers().length;
 
             document.getElementById('total-users').textContent = usersData.length;
