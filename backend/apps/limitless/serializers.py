@@ -4,7 +4,7 @@ Serializers for Limitless API.
 from rest_framework import serializers
 from django.db.models import Sum, Count, Q
 
-from .models import LimitlessUser, LimitlessPurchase, LimitlessEarning
+from .models import LimitlessUser, LimitlessPurchase, LimitlessEarning, WalletProfile
 
 
 class LimitlessPurchaseSerializer(serializers.ModelSerializer):
@@ -182,3 +182,35 @@ class LimitlessStatsSerializer(serializers.Serializer):
     total_volume = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_earnings = serializers.DecimalField(max_digits=20, decimal_places=2)
     root_users = serializers.IntegerField()
+
+
+class WalletProfileSerializer(serializers.ModelSerializer):
+    """Serializer for wallet profile data."""
+    subwallets_list = serializers.ListField(read_only=True)
+    short_wallet = serializers.CharField(read_only=True)
+    
+    class Meta:
+        model = WalletProfile
+        fields = [
+            'id', 'export_id', 'main_wallet', 'short_wallet', 'subwallets', 'subwallets_list',
+            'email', 'email_verified', 'is_seller',
+            'preferred_language', 'can_communicate_english',
+            'community_count', 'atla_balance', 'rank',
+            'has_lp', 'lp_shares', 'has_chs', 'ch_share',
+            'has_dsy', 'dsy_bonus', 'bfi_atla', 'bfi_jggl', 'jggl',
+            'need_private_zoom_call', 'want_business_dev_access', 'want_ceo_access',
+            'telegram', 'facebook', 'whatsapp', 'viber', 'line', 'other_contact',
+            'created_at', 'updated_at'
+        ]
+
+
+class WalletProfileListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for wallet profile list."""
+    short_wallet = serializers.CharField(read_only=True)
+    
+    class Meta:
+        model = WalletProfile
+        fields = [
+            'id', 'export_id', 'main_wallet', 'short_wallet',
+            'email', 'rank', 'atla_balance', 'community_count'
+        ]

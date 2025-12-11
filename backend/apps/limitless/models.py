@@ -108,6 +108,84 @@ class LimitlessUser(MPTTModel, TimeStampedModel):
         return "No wallet"
 
 
+class WalletProfile(TimeStampedModel):
+    """
+    Extended wallet profile data from rank_users export.
+    Contains detailed information about wallet holders.
+    """
+    # Identification
+    export_id = models.IntegerField(unique=True, db_index=True, verbose_name='Export ID')
+    main_wallet = models.CharField(max_length=255, db_index=True, verbose_name='Main Wallet')
+    subwallets = models.TextField(blank=True, verbose_name='Subwallets')
+    
+    # Contact info
+    email = models.EmailField(blank=True, null=True)
+    email_verified = models.BooleanField(default=False, verbose_name='Email Verified')
+    
+    # User preferences
+    is_seller = models.BooleanField(default=False, verbose_name='Seller')
+    preferred_language = models.CharField(max_length=100, blank=True, verbose_name='Preferred Language')
+    can_communicate_english = models.BooleanField(default=False, verbose_name='Can Communicate in English')
+    
+    # Community
+    community_count = models.IntegerField(default=0, verbose_name='Community Count')
+    
+    # Balances & Rank
+    atla_balance = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name='ATLA Balance')
+    rank = models.CharField(max_length=50, blank=True, verbose_name='Rank')
+    
+    # LP (Liquidity Pool)
+    has_lp = models.BooleanField(default=False, verbose_name='Has LP')
+    lp_shares = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name='LP Shares')
+    
+    # CHS (Charity Holdings Share)
+    has_chs = models.BooleanField(default=False, verbose_name='Has CHS')
+    ch_share = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name='CH Share')
+    
+    # DSY (Daisy)
+    has_dsy = models.BooleanField(default=False, verbose_name='Has DSY')
+    dsy_bonus = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name='DSY Bonus')
+    
+    # BoostyFi tokens
+    bfi_atla = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name='BFI ATLA')
+    bfi_jggl = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name='BFI JGGL')
+    jggl = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name='JGGL')
+    
+    # Access requests
+    need_private_zoom_call = models.BooleanField(default=False, verbose_name='Need Private Zoom Call')
+    want_business_dev_access = models.BooleanField(default=False, verbose_name='Want Business Dev Access')
+    want_ceo_access = models.BooleanField(default=False, verbose_name='Want CEO Access')
+    
+    # Social/Contact
+    telegram = models.CharField(max_length=255, blank=True, verbose_name='Telegram')
+    facebook = models.CharField(max_length=255, blank=True, verbose_name='Facebook')
+    whatsapp = models.CharField(max_length=255, blank=True, verbose_name='WhatsApp')
+    viber = models.CharField(max_length=255, blank=True, verbose_name='Viber')
+    line = models.CharField(max_length=255, blank=True, verbose_name='Line')
+    other_contact = models.TextField(blank=True, verbose_name='Other Contact')
+    
+    class Meta:
+        verbose_name = 'Wallet Profile'
+        verbose_name_plural = 'Wallet Profiles'
+        ordering = ['-export_id']
+    
+    def __str__(self):
+        return f"Profile #{self.export_id} - {self.short_wallet}"
+    
+    @property
+    def short_wallet(self):
+        if self.main_wallet:
+            return f"{self.main_wallet[:6]}...{self.main_wallet[-4:]}"
+        return "No wallet"
+    
+    @property
+    def subwallets_list(self):
+        """Return subwallets as a list."""
+        if not self.subwallets:
+            return []
+        return [w.strip() for w in self.subwallets.split(',') if w.strip()]
+
+
 class PaymentStatus(models.TextChoices):
     PENDING = 'PENDING', 'Pending'
     COMPLETED = 'COMPLETED', 'Completed'

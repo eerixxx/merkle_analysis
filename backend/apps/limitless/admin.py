@@ -6,7 +6,7 @@ from django.db.models import Sum, Count
 from django.utils.html import format_html
 from mptt.admin import MPTTModelAdmin
 
-from .models import LimitlessUser, LimitlessPurchase, LimitlessEarning
+from .models import LimitlessUser, LimitlessPurchase, LimitlessEarning, WalletProfile
 
 
 class LimitlessPurchaseInline(admin.TabularInline):
@@ -148,3 +148,54 @@ class LimitlessEarningAdmin(admin.ModelAdmin):
             return f"{obj.recipient.username or f'User {obj.recipient.original_id}'}"
         return f"ID: {obj.recipient_original_id}"
     recipient_display.short_description = 'Recipient'
+
+
+@admin.register(WalletProfile)
+class WalletProfileAdmin(admin.ModelAdmin):
+    """Admin for Wallet Profiles."""
+    list_display = [
+        'export_id', 'short_wallet_display', 'email', 'rank',
+        'atla_balance', 'community_count', 'has_lp', 'has_chs', 'has_dsy',
+        'email_verified', 'created_at'
+    ]
+    list_filter = [
+        'rank', 'email_verified', 'is_seller', 'has_lp', 'has_chs', 'has_dsy',
+        'need_private_zoom_call', 'want_business_dev_access', 'want_ceo_access',
+        'can_communicate_english'
+    ]
+    search_fields = ['main_wallet', 'subwallets', 'email', 'telegram', 'rank']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering = ['-export_id']
+    list_per_page = 50
+    
+    fieldsets = (
+        ('Identification', {
+            'fields': ('export_id', 'main_wallet', 'subwallets')
+        }),
+        ('Contact Info', {
+            'fields': ('email', 'email_verified', 'is_seller', 'preferred_language', 'can_communicate_english')
+        }),
+        ('Balances & Rank', {
+            'fields': ('atla_balance', 'rank', 'community_count')
+        }),
+        ('LP/CHS/DSY', {
+            'fields': (('has_lp', 'lp_shares'), ('has_chs', 'ch_share'), ('has_dsy', 'dsy_bonus'))
+        }),
+        ('BoostyFi Tokens', {
+            'fields': ('bfi_atla', 'bfi_jggl', 'jggl')
+        }),
+        ('Access Requests', {
+            'fields': ('need_private_zoom_call', 'want_business_dev_access', 'want_ceo_access')
+        }),
+        ('Social/Contact', {
+            'fields': ('telegram', 'facebook', 'whatsapp', 'viber', 'line', 'other_contact')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def short_wallet_display(self, obj):
+        return obj.short_wallet
+    short_wallet_display.short_description = 'Wallet'
