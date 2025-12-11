@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoostyFi User Hierarchy Tree</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            background: #11998e;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .controls button:hover {
+            background: #38ef7d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-box input {
+            padding: 12px 20px;
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #11998e;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            box-shadow: 0 0 10px rgba(17, 153, 142, 0.5);
+        }
+
+        .tree-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        /* Tree structure styles */
+        .tree, .tree ul, .tree li {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+
+        .tree {
+            margin: 0 0 1em;
+            text-align: center;
+        }
+
+        .tree, .tree ul {
+            display: table;
+        }
+
+        .tree ul {
+            width: 100%;
+        }
+
+        .tree li {
+            display: table-cell;
+            padding: .5em 0;
+            vertical-align: top;
+        }
+
+        /* Horizontal lines */
+        .tree li:before {
+            outline: solid 1px #11998e;
+            content: "";
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        .tree li:first-child:before {
+            left: 50%;
+        }
+
+        .tree li:last-child:before {
+            right: 50%;
+        }
+
+        /* Node styling */
+        .tree .node-box {
+            border: solid 2px #11998e;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 0 .5em .5em;
+            padding: 12px 16px;
+            position: relative;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-width: 220px;
+        }
+
+        .tree .node-box:hover {
+            background: #11998e;
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        .tree .node-box:hover .badge {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        .tree .node-box.highlighted {
+            background: #ffc107;
+            border-color: #ffc107;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Vertical line from node */
+        .tree ul:before,
+        .tree .node-box:before {
+            outline: solid 1px #11998e;
+            content: "";
+            height: .5em;
+            left: 50%;
+            position: absolute;
+        }
+
+        .tree ul:before {
+            top: -.5em;
+        }
+
+        .tree .node-box:before {
+            top: -.55em;
+        }
+
+        /* Root node doesn't connect upwards */
+        .tree > li {
+            margin-top: 0;
+        }
+
+        .tree > li:before,
+        .tree > li:after,
+        .tree > li > .node-box:before {
+            outline: none;
+        }
+
+        /* Node content */
+        .node-username {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .node-wallet {
+            font-family: monospace;
+            font-size: 0.75em;
+            opacity: 0.6;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .node-badges {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: white;
+            background: #11998e;
+        }
+
+        .badge.purchases {
+            background: #28a745;
+        }
+
+        .badge.team-volume {
+            background: #007bff;
+        }
+
+        .badge.earnings {
+            background: #fd7e14;
+        }
+
+        .badge.children {
+            background: #6c757d;
+        }
+
+        .badge.referral-type {
+            background: #9b59b6;
+        }
+
+        .badge.atla {
+            background: #e74c3c;
+        }
+
+        /* Modal for details */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 900px;
+            border-radius: 10px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 30px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal h2 {
+            color: #11998e;
+            margin-bottom: 20px;
+        }
+
+        .modal .info-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #11998e;
+            border-radius: 4px;
+        }
+
+        .modal .info-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .modal .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .modal .info-item {
+            padding: 8px;
+        }
+
+        .modal .info-item strong {
+            color: #11998e;
+        }
+
+        .purchase-item, .earning-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .earning-item {
+            border-left-color: #fd7e14;
+        }
+
+        .purchase-item strong {
+            color: #28a745;
+            font-size: 1.1em;
+        }
+
+        .earning-item strong {
+            color: #fd7e14;
+            font-size: 1.1em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.5em;
+            color: #11998e;
+        }
+
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #dc3545;
+            background: #f8d7da;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .children-list {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 BoostyFi Hierarchy Tree</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <div class="value" id="total-users">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Purchases</h3>
+                <div class="value" id="total-purchases">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Volume</h3>
+                <div class="value" id="total-volume">$0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Earnings</h3>
+                <div class="value" id="total-earnings">$0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total ATLA</h3>
+                <div class="value" id="total-atla">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Root Users</h3>
+                <div class="value" id="root-users">0</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="expandAll()">🔽 Expand All</button>
+            <button onclick="collapseAll()">🔼 Collapse All</button>
+            <button onclick="expandLevel(1)">Level 1</button>
+            <button onclick="expandLevel(2)">Level 2</button>
+            <button onclick="expandLevel(3)">Level 3</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="🔍 Search by username, wallet, or ID...">
+        </div>
+
+        <div class="tree-wrapper">
+            <div id="tree-container">
+                <div class="loading">Loading data...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for user details -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        let usersData = [];
+        let purchasesData = [];
+        let earningsData = [];
+        let userMapById = new Map();
+        let userMapByWallet = new Map();
+        let currentExpandLevel = 0;
+
+        // Parse CSV
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return [];
+            
+            const headers = lines[0].replace(/"/g, '').split(',');
+            return lines.slice(1).filter(line => line.trim()).map(line => {
+                const values = parseCSVLine(line);
+                const obj = {};
+                headers.forEach((header, index) => {
+                    obj[header.trim()] = values[index] ? values[index].replace(/"/g, '').trim() : '';
+                });
+                return obj;
+            });
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            return result;
+        }
+
+        // Load CSV files
+        async function loadData() {
+            try {
+                const usersResponse = await fetch('../sheets/boostyfi/boostyfi_users.csv');
+                const usersText = await usersResponse.text();
+                usersData = parseCSV(usersText);
+
+                const purchasesResponse = await fetch('../sheets/boostyfi/boostyfi_purchases.csv');
+                const purchasesText = await purchasesResponse.text();
+                purchasesData = parseCSV(purchasesText);
+
+                const earningsResponse = await fetch('../sheets/boostyfi/boostyfi_referral_earnings.csv');
+                const earningsText = await earningsResponse.text();
+                earningsData = parseCSV(earningsText);
+
+                processData();
+                renderTree();
+                updateStats();
+            } catch (error) {
+                document.getElementById('tree-container').innerHTML = 
+                    `<div class="error">Error loading data: ${error.message}<br><br>Make sure the server is running on port 8080</div>`;
+            }
+        }
+
+        // Process data into maps
+        function processData() {
+            // Create user maps (by ID and by wallet)
+            usersData.forEach(user => {
+                if (user.id) {
+                    const userData = {
+                        ...user,
+                        children: [],
+                        purchases: [],
+                        earnings: [],
+                        directVolume: 0,
+                        teamVolume: 0,
+                        totalEarnings: 0
+                    };
+                    userMapById.set(user.id, userData);
+                    if (user.wallet) {
+                        userMapByWallet.set(user.wallet, userData);
+                    }
+                }
+            });
+
+            // Build parent-child relationships
+            usersData.forEach(user => {
+                if (user.parent_id && userMapById.has(user.parent_id) && userMapById.has(user.id)) {
+                    const parent = userMapById.get(user.parent_id);
+                    parent.children.push(user.id);
+                }
+            });
+
+            // Assign purchases to users (boostyfi uses 'amount' instead of 'amount_usdt')
+            purchasesData.forEach(purchase => {
+                if (purchase.buyer_id && userMapById.has(purchase.buyer_id)) {
+                    const user = userMapById.get(purchase.buyer_id);
+                    user.purchases.push(purchase);
+                    user.directVolume += parseFloat(purchase.amount) || 0;
+                }
+            });
+
+            // Assign earnings to users (boostyfi uses 'user_id' as recipient)
+            earningsData.forEach(earning => {
+                if (earning.user_id && userMapById.has(earning.user_id)) {
+                    const user = userMapById.get(earning.user_id);
+                    user.earnings.push(earning);
+                    user.totalEarnings += parseFloat(earning.amount) || 0;
+                }
+            });
+
+            // Calculate team volumes recursively
+            userMapById.forEach((user, id) => {
+                calculateTeamVolume(id);
+            });
+        }
+
+        function calculateTeamVolume(userId) {
+            const user = userMapById.get(userId);
+            if (!user) return 0;
+
+            if (user.teamVolumeCalculated) {
+                return user.teamVolume;
+            }
+
+            let teamVolume = user.directVolume;
+            user.children.forEach(childId => {
+                teamVolume += calculateTeamVolume(childId);
+            });
+
+            user.teamVolume = teamVolume;
+            user.teamVolumeCalculated = true;
+            return teamVolume;
+        }
+
+        // Find root users (no parent)
+        function getRootUsers() {
+            const roots = [];
+            usersData.forEach(user => {
+                if (!user.parent_id || !userMapById.has(user.parent_id)) {
+                    if (user.id && userMapById.has(user.id)) {
+                        roots.push(user.id);
+                    }
+                }
+            });
+            return roots;
+        }
+
+        // Render tree
+        function renderTree() {
+            const container = document.getElementById('tree-container');
+            const roots = getRootUsers();
+            
+            if (roots.length === 0) {
+                container.innerHTML = '<div class="error">No root users found</div>';
+                return;
+            }
+
+            let html = '<ul class="tree">';
+            roots.forEach(userId => {
+                html += renderNode(userId, 0);
+            });
+            html += '</ul>';
+
+            container.innerHTML = html;
+            attachEventListeners();
+        }
+
+        function renderNode(userId, level) {
+            const user = userMapById.get(userId);
+            if (!user) return '';
+
+            const hasChildren = user.children.length > 0;
+            const displayName = user.username || `User ${user.id}`;
+            const wallet = user.wallet || user.evm_address || user.tron_address || '';
+            const shortWallet = wallet ? (wallet.substring(0, 6) + '...' + wallet.substring(wallet.length - 4)) : 'No wallet';
+            const totalAtla = (parseFloat(user.locked_atla_balance) || 0) + (parseFloat(user.unlocked_atla_balance) || 0);
+            
+            let html = '<li>';
+            html += `
+                <div class="node-box ${hasChildren ? 'has-children' : ''}" data-user-id="${userId}" data-level="${level}">
+                    <span class="node-username">${displayName}</span>
+                    <span class="node-wallet">${shortWallet}</span>
+                    <div class="node-badges">
+                        ${user.referral_type ? `<span class="badge referral-type">🏷️ ${user.referral_type}</span>` : ''}
+                        ${user.purchases.length > 0 ? `<span class="badge purchases">💰 ${user.purchases.length}</span>` : ''}
+                        ${user.directVolume > 0 ? `<span class="badge purchases">$${user.directVolume.toFixed(0)}</span>` : ''}
+                        <span class="badge team-volume">📊 $${user.teamVolume.toFixed(0)}</span>
+                        ${user.totalEarnings > 0 ? `<span class="badge earnings">💵 $${user.totalEarnings.toFixed(0)}</span>` : ''}
+                        ${totalAtla > 0 ? `<span class="badge atla">🪙 ${totalAtla.toFixed(2)}</span>` : ''}
+                        ${hasChildren ? `<span class="badge children">👥 ${user.children.length}</span>` : ''}
+                    </div>
+                </div>
+            `;
+
+            if (hasChildren) {
+                html += '<ul class="children-list">';
+                user.children.forEach(childId => {
+                    html += renderNode(childId, level + 1);
+                });
+                html += '</ul>';
+            }
+
+            html += '</li>';
+            return html;
+        }
+
+        function attachEventListeners() {
+            document.querySelectorAll('.node-box').forEach(box => {
+                box.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const userId = this.dataset.userId;
+                    
+                    // Show modal with details
+                    showUserDetails(userId);
+                    
+                    // Toggle children if exists
+                    const parentLi = this.parentElement;
+                    const childrenList = parentLi.querySelector(':scope > .children-list');
+                    if (childrenList) {
+                        if (childrenList.style.display === 'none' || !childrenList.style.display) {
+                            childrenList.style.display = 'table';
+                        } else {
+                            childrenList.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        }
+
+        function showUserDetails(userId) {
+            const user = userMapById.get(userId);
+            if (!user) return;
+
+            const modalBody = document.getElementById('modal-body');
+            const totalAtla = (parseFloat(user.locked_atla_balance) || 0) + (parseFloat(user.unlocked_atla_balance) || 0);
+            
+            // Calculate earnings by type
+            const earningsByType = {};
+            user.earnings.forEach(e => {
+                const type = e.earning_type || 'UNKNOWN';
+                if (!earningsByType[type]) {
+                    earningsByType[type] = { count: 0, amount: 0 };
+                }
+                earningsByType[type].count++;
+                earningsByType[type].amount += parseFloat(e.amount) || 0;
+            });
+
+            // Calculate earnings by referral system type
+            const earningsBySystem = {};
+            user.earnings.forEach(e => {
+                const type = e.referral_system_type || 'UNKNOWN';
+                if (!earningsBySystem[type]) {
+                    earningsBySystem[type] = { count: 0, amount: 0 };
+                }
+                earningsBySystem[type].count++;
+                earningsBySystem[type].amount += parseFloat(e.amount) || 0;
+            });
+
+            const wallet = user.wallet || user.evm_address || user.tron_address || 'No wallet';
+
+            let html = `
+                <h2>👤 ${user.username || 'User'} - ID: ${user.id}</h2>
+                
+                <div class="info-section">
+                    <h3>📋 Basic Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><strong>ID:</strong> ${user.id}</div>
+                        <div class="info-item"><strong>Username:</strong> ${user.username || 'N/A'}</div>
+                        <div class="info-item"><strong>Email:</strong> ${user.email || 'N/A'}</div>
+                        <div class="info-item"><strong>Referral Code:</strong> ${user.referral_code || 'N/A'}</div>
+                        <div class="info-item"><strong>Referral Type:</strong> ${user.referral_type || 'N/A'}</div>
+                        <div class="info-item"><strong>Created:</strong> ${user.created_at}</div>
+                        <div class="info-item"><strong>Status:</strong> ${user.is_active === 'true' ? '✅ Active' : '❌ Inactive'}</div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>💰 Financial Overview</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><strong>Direct Volume:</strong> $${user.directVolume.toFixed(2)}</div>
+                        <div class="info-item"><strong>Team Volume:</strong> $${user.teamVolume.toFixed(2)}</div>
+                        <div class="info-item"><strong>Team Contribution:</strong> $${(user.teamVolume - user.directVolume).toFixed(2)}</div>
+                        <div class="info-item"><strong>Total Purchases:</strong> ${user.purchases.length}</div>
+                        <div class="info-item"><strong>Total Earnings:</strong> $${user.totalEarnings.toFixed(2)}</div>
+                        <div class="info-item"><strong>Earnings Records:</strong> ${user.earnings.length}</div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>🪙 ATLA Balance</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><strong>Locked ATLA:</strong> ${parseFloat(user.locked_atla_balance || 0).toFixed(6)}</div>
+                        <div class="info-item"><strong>Unlocked ATLA:</strong> ${parseFloat(user.unlocked_atla_balance || 0).toFixed(6)}</div>
+                        <div class="info-item"><strong>Total ATLA:</strong> ${totalAtla.toFixed(6)}</div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>👨‍👩‍👧‍👦 Team Structure</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><strong>Direct Referrals:</strong> ${user.children.length}</div>
+                        <div class="info-item"><strong>Total Team Size:</strong> ${countTotalTeam(userId)}</div>
+                        ${user.parent_id && userMapById.has(user.parent_id) ? 
+                            `<div class="info-item"><strong>Sponsor:</strong> ${userMapById.get(user.parent_id).username || `User ${user.parent_id}`}</div>` : 
+                            '<div class="info-item"><strong>Status:</strong> Root User</div>'}
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>🔗 Wallet Information</h3>
+                    <div style="word-break: break-all; font-family: monospace; font-size: 0.9em; padding: 10px; background: white; border-radius: 4px;">
+                        <div><strong>Main:</strong> ${user.wallet || 'N/A'}</div>
+                        <div><strong>EVM:</strong> ${user.evm_address || 'N/A'}</div>
+                        <div><strong>TRON:</strong> ${user.tron_address || 'N/A'}</div>
+                    </div>
+                </div>
+            `;
+
+            // Earnings breakdown by type
+            if (Object.keys(earningsByType).length > 0) {
+                html += `
+                    <div class="info-section">
+                        <h3>💵 Earnings by Type</h3>
+                        ${Object.entries(earningsByType).map(([type, data]) => `
+                            <div class="earning-item">
+                                <div><strong>${type}:</strong> $${data.amount.toFixed(2)} (${data.count} records)</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Earnings by referral system
+            if (Object.keys(earningsBySystem).length > 0) {
+                const systemNames = { '1': 'Influencer', '2': 'KOL', '3': 'MLM' };
+                html += `
+                    <div class="info-section">
+                        <h3>📊 Earnings by Referral System</h3>
+                        ${Object.entries(earningsBySystem).map(([type, data]) => `
+                            <div class="earning-item">
+                                <div><strong>${systemNames[type] || `System ${type}`}:</strong> $${data.amount.toFixed(2)} (${data.count} records)</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Purchase history
+            if (user.purchases.length > 0) {
+                html += `
+                    <div class="info-section">
+                        <h3>💳 Purchase History (${user.purchases.length})</h3>
+                        ${user.purchases.slice(0, 10).map(p => `
+                            <div class="purchase-item">
+                                <div><strong>$${parseFloat(p.amount).toFixed(2)}</strong> ${p.full_amount ? `(Full: $${parseFloat(p.full_amount).toFixed(2)})` : ''}</div>
+                                <div style="font-size: 0.9em; opacity: 0.7; margin-top: 5px;">
+                                    📅 ${p.created_at} | Type: ${p.payment_type || 'N/A'}
+                                </div>
+                                <div style="font-size: 0.85em; opacity: 0.6; margin-top: 3px; word-break: break-all;">
+                                    🔗 TX: ${p.tx_hash || 'N/A'}
+                                </div>
+                                <div style="font-size: 0.85em; margin-top: 3px;">
+                                    Status: <span style="color: ${p.payment_status === 'COMPLETED' ? '#28a745' : '#ffc107'}; font-weight: bold;">${p.payment_status}</span>
+                                    ${p.discount_rate && parseFloat(p.discount_rate) > 0 ? ` | Discount: ${(parseFloat(p.discount_rate) * 100).toFixed(1)}%` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${user.purchases.length > 10 ? `<p style="text-align: center; opacity: 0.6; margin-top: 10px;">... and ${user.purchases.length - 10} more</p>` : ''}
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="info-section">
+                        <h3>💳 Purchase History</h3>
+                        <p style="opacity: 0.6; text-align: center; padding: 20px;">No purchases yet</p>
+                    </div>
+                `;
+            }
+
+            // Earnings details
+            if (user.earnings.length > 0) {
+                const systemNames = { '1': 'Influencer', '2': 'KOL', '3': 'MLM' };
+                html += `
+                    <div class="info-section">
+                        <h3>💵 Recent Earnings (showing last 15)</h3>
+                        ${user.earnings.slice(-15).reverse().map(e => {
+                            const fromUser = userMapById.get(e.buyer_id);
+                            return `
+                            <div class="earning-item">
+                                <div><strong>$${parseFloat(e.amount).toFixed(2)}</strong> - ${e.earning_type || 'N/A'}</div>
+                                <div style="font-size: 0.9em; opacity: 0.7; margin-top: 5px;">
+                                    📅 ${e.created_at} | Gen Level: ${e.generation_level || 'N/A'} | ${(parseFloat(e.percentage || 0) * 100).toFixed(1)}%
+                                </div>
+                                <div style="font-size: 0.85em; margin-top: 3px;">
+                                    Status: <span style="color: ${e.status === 'WITHDRAWN' ? '#28a745' : '#ffc107'}; font-weight: bold;">${e.status}</span>
+                                    | System: ${systemNames[e.referral_system_type] || e.referral_system_type || 'N/A'}
+                                </div>
+                                ${e.qualification_reason ? `<div style="font-size: 0.85em; opacity: 0.6;">Reason: ${e.qualification_reason}</div>` : ''}
+                                ${e.buyer_id ? `<div style="font-size: 0.85em; opacity: 0.6;">From: ${fromUser?.username || `User ${e.buyer_id}`}</div>` : ''}
+                            </div>
+                        `}).join('')}
+                        ${user.earnings.length > 15 ? `<p style="text-align: center; opacity: 0.6; margin-top: 10px;">... and ${user.earnings.length - 15} more</p>` : ''}
+                    </div>
+                `;
+            }
+
+            modalBody.innerHTML = html;
+            document.getElementById('userModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+
+        function countTotalTeam(userId) {
+            const user = userMapById.get(userId);
+            if (!user) return 0;
+            
+            let count = user.children.length;
+            user.children.forEach(childId => {
+                count += countTotalTeam(childId);
+            });
+            return count;
+        }
+
+        function updateStats() {
+            const totalPurchases = purchasesData.length;
+            const totalVolume = purchasesData.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+            const totalEarnings = earningsData.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            const totalAtla = usersData.reduce((sum, u) => {
+                return sum + (parseFloat(u.locked_atla_balance) || 0) + (parseFloat(u.unlocked_atla_balance) || 0);
+            }, 0);
+            const rootUsers = getRootUsers().length;
+
+            document.getElementById('total-users').textContent = usersData.length.toLocaleString();
+            document.getElementById('total-purchases').textContent = totalPurchases.toLocaleString();
+            document.getElementById('total-volume').textContent = `$${totalVolume.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('total-earnings').textContent = `$${totalEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('total-atla').textContent = totalAtla.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('root-users').textContent = rootUsers.toLocaleString();
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.children-list').forEach(list => {
+                list.style.display = 'table';
+            });
+            currentExpandLevel = 999;
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.children-list').forEach(list => {
+                list.style.display = 'none';
+            });
+            currentExpandLevel = 0;
+        }
+
+        function expandLevel(maxLevel) {
+            currentExpandLevel = maxLevel;
+            document.querySelectorAll('.node-box').forEach(box => {
+                const level = parseInt(box.dataset.level);
+                const parentLi = box.parentElement;
+                const childrenList = parentLi.querySelector(':scope > .children-list');
+                
+                if (childrenList) {
+                    if (level < maxLevel) {
+                        childrenList.style.display = 'table';
+                    } else {
+                        childrenList.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                
+                // Remove all highlights
+                document.querySelectorAll('.node-box').forEach(node => {
+                    node.classList.remove('highlighted');
+                });
+
+                if (searchTerm.length < 2) return;
+
+                // Search and highlight
+                let found = false;
+                document.querySelectorAll('.node-box').forEach(box => {
+                    const userId = box.dataset.userId;
+                    const user = userMapById.get(userId);
+                    
+                    if (user) {
+                        const username = (user.username || '').toLowerCase();
+                        const walletAddr = (user.wallet || user.evm_address || user.tron_address || '').toLowerCase();
+                        const userIdStr = user.id.toString();
+                        
+                        if (username.includes(searchTerm) || walletAddr.includes(searchTerm) || userIdStr.includes(searchTerm)) {
+                            box.classList.add('highlighted');
+                            expandToNode(box);
+                            found = true;
+                        }
+                    }
+                });
+
+                if (found) {
+                    const firstHighlighted = document.querySelector('.node-box.highlighted');
+                    if (firstHighlighted) {
+                        firstHighlighted.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            });
+
+            // Close modal on click outside
+            window.addEventListener('click', function(e) {
+                const modal = document.getElementById('userModal');
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Close modal on Esc key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            loadData();
+        });
+
+        function expandToNode(nodeBox) {
+            let parent = nodeBox.closest('li').parentElement;
+            while (parent && parent.classList.contains('children-list')) {
+                parent.style.display = 'table';
+                const parentLi = parent.closest('li');
+                if (parentLi) {
+                    parent = parentLi.parentElement;
+                } else {
+                    break;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+

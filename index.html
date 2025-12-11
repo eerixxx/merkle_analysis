@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Hierarchy Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 1.2em;
+            margin-bottom: 50px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 320px;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+        }
+
+        .card.limitless::before {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .card.boostyfi::before {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+        }
+
+        .card:hover {
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+
+        .card-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .card.limitless h2 {
+            color: #667eea;
+        }
+
+        .card.boostyfi h2 {
+            color: #11998e;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-stats {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .card-stat {
+            text-align: center;
+        }
+
+        .card-stat .value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .card.limitless .card-stat .value {
+            color: #667eea;
+        }
+
+        .card.boostyfi .card-stat .value {
+            color: #11998e;
+        }
+
+        .card-stat .label {
+            font-size: 0.8em;
+            color: #999;
+            text-transform: uppercase;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .card.limitless .btn {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .card.boostyfi .btn {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+        }
+
+        .card:hover .btn {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        footer {
+            position: fixed;
+            bottom: 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌳 Hierarchy Viewer</h1>
+        <p class="subtitle">Choose a project to explore its user hierarchy tree</p>
+        
+        <div class="cards">
+            <a href="limitless/" class="card limitless">
+                <div class="card-icon">🚀</div>
+                <h2>Limitless</h2>
+                <p>Explore the Limitless user tree with purchases, earnings, and team volumes.</p>
+                <div class="card-stats">
+                    <div class="card-stat">
+                        <div class="value">2.8K+</div>
+                        <div class="label">Users</div>
+                    </div>
+                    <div class="card-stat">
+                        <div class="value">5.5K+</div>
+                        <div class="label">Earnings</div>
+                    </div>
+                </div>
+                <span class="btn">View Tree →</span>
+            </a>
+            
+            <a href="boostyfi/" class="card boostyfi">
+                <div class="card-icon">💎</div>
+                <h2>BoostyFi</h2>
+                <p>Explore the BoostyFi user tree with ATLA balances, multi-system earnings, and more.</p>
+                <div class="card-stats">
+                    <div class="card-stat">
+                        <div class="value">27K+</div>
+                        <div class="label">Users</div>
+                    </div>
+                    <div class="card-stat">
+                        <div class="value">3.1K+</div>
+                        <div class="label">Earnings</div>
+                    </div>
+                </div>
+                <span class="btn">View Tree →</span>
+            </a>
+        </div>
+    </div>
+    
+    <footer>
+        Run with: python3 -m http.server 8080
+    </footer>
+</body>
+</html>
+
