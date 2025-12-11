@@ -5,6 +5,7 @@ from rest_framework import serializers
 from django.db.models import Sum, Count
 
 from .models import BoostyFiUser, BoostyFiPurchase, BoostyFiEarning
+from apps.core.models import SellerAssignment
 
 
 class BoostyFiPurchaseSerializer(serializers.ModelSerializer):
@@ -84,6 +85,7 @@ class BoostyFiUserDetailSerializer(serializers.ModelSerializer):
     earnings_by_type = serializers.SerializerMethodField()
     earnings_by_system = serializers.SerializerMethodField()
     total_atla = serializers.ReadOnlyField()
+    assigned_sellers = serializers.SerializerMethodField()
     
     class Meta:
         model = BoostyFiUser
@@ -95,7 +97,8 @@ class BoostyFiUserDetailSerializer(serializers.ModelSerializer):
             'date_joined', 'created_at', 'parent_username',
             'children_count', 'team_size', 'purchases_count', 'pending_purchases_count',
             'direct_volume', 'team_volume', 'total_earnings', 'pending_earnings',
-            'purchases', 'recent_earnings', 'earnings_by_type', 'earnings_by_system'
+            'purchases', 'recent_earnings', 'earnings_by_type', 'earnings_by_system',
+            'assigned_sellers'
         ]
     
     def get_children_count(self, obj):
@@ -152,6 +155,9 @@ class BoostyFiUserDetailSerializer(serializers.ModelSerializer):
             count=Count('id'),
             total=Sum('amount')
         ))
+    
+    def get_assigned_sellers(self, obj):
+        return SellerAssignment.get_seller_names_for_user('boostyfi', obj.id)
 
 
 class BoostyFiUserTreeSerializer(serializers.ModelSerializer):
@@ -162,13 +168,14 @@ class BoostyFiUserTreeSerializer(serializers.ModelSerializer):
     total_earnings = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True, default=0)
     children_count = serializers.IntegerField(read_only=True, default=0)
     total_atla = serializers.ReadOnlyField()
+    assigned_sellers = serializers.SerializerMethodField()
     
     class Meta:
         model = BoostyFiUser
         fields = [
             'id', 'original_id', 'username', 'wallet', 'referral_type',
             'is_active', 'children_count', 'purchases_count', 'direct_volume',
-            'total_earnings', 'total_atla', 'children'
+            'total_earnings', 'total_atla', 'children', 'assigned_sellers'
         ]
     
     def get_children(self, obj):
@@ -188,6 +195,9 @@ class BoostyFiUserTreeSerializer(serializers.ModelSerializer):
                 'current_depth': current_depth + 1
             }
         ).data
+    
+    def get_assigned_sellers(self, obj):
+        return SellerAssignment.get_seller_names_for_user('boostyfi', obj.id)
 
 
 class BoostyFiStatsSerializer(serializers.Serializer):

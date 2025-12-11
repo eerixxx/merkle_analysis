@@ -24,10 +24,12 @@ export interface LimitlessUser {
   purchases?: LimitlessPurchase[]
   recent_earnings?: LimitlessEarning[]
   earnings_by_type?: EarningByType[]
+  assigned_sellers?: SellerInfo[]
 }
 
 export interface LimitlessUserTree extends LimitlessUser {
   children: LimitlessUserTree[]
+  assigned_sellers?: SellerInfo[]
 }
 
 export interface LimitlessPurchase {
@@ -85,10 +87,12 @@ export interface BoostyFiUser {
   recent_earnings?: BoostyFiEarning[]
   earnings_by_type?: EarningByType[]
   earnings_by_system?: EarningBySystem[]
+  assigned_sellers?: SellerInfo[]
 }
 
 export interface BoostyFiUserTree extends BoostyFiUser {
   children: BoostyFiUserTree[]
+  assigned_sellers?: SellerInfo[]
 }
 
 export interface BoostyFiPurchase {
@@ -185,4 +189,75 @@ export interface GlobalSearchResponse {
     count: number
     results: BoostyFiUser[]
   }
+}
+
+// Seller Assignment
+export interface SellerInfo {
+  id: number
+  seller_id: number
+  seller_name: string
+  seller_username: string
+  created_at: string
+}
+
+export interface SellerAssignment {
+  id: number
+  seller: number
+  seller_name: string
+  seller_username: string
+  platform: 'limitless' | 'boostyfi'
+  target_user_id: number
+  wallet_address: string
+  notes: string
+  created_at: string
+}
+
+// Current User (for auth)
+export interface CurrentUser {
+  id: number
+  username: string
+  email: string | null
+  full_name: string
+  is_seller: boolean
+  is_staff: boolean
+  is_active: boolean
+  date_joined: string
+}
+
+// Wallet Profile from rank export
+export interface WalletProfile {
+  id: number
+  export_id: number
+  main_wallet: string
+  short_wallet: string
+  subwallets: string
+  subwallets_list: string[]
+  email: string | null
+  email_verified: boolean
+  is_seller: boolean
+  preferred_language: string
+  can_communicate_english: boolean
+  community_count: number
+  atla_balance: string
+  rank: string
+  has_lp: boolean
+  lp_shares: string
+  has_chs: boolean
+  ch_share: string
+  has_dsy: boolean
+  dsy_bonus: string
+  bfi_atla: string
+  bfi_jggl: string
+  jggl: string
+  need_private_zoom_call: boolean
+  want_business_dev_access: boolean
+  want_ceo_access: boolean
+  telegram: string
+  facebook: string
+  whatsapp: string
+  viber: string
+  line: string
+  other_contact: string
+  created_at: string
+  updated_at: string
 }

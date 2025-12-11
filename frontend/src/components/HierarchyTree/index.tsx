@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
 import { cn, shortWallet } from '@/lib/utils'
-import { Loader2 } from 'lucide-react'
+import { Loader2, UserCheck } from 'lucide-react'
 import { limitlessApi, boostyfiApi } from '@/lib/api'
-import type { LimitlessUserTree, BoostyFiUserTree } from '@/types'
+import type { LimitlessUserTree, BoostyFiUserTree, SellerInfo } from '@/types'
 import './styles.css'
 
 type TreeNode = LimitlessUserTree | BoostyFiUserTree
@@ -76,6 +76,10 @@ function TreeNodeComponent({ node, variant, searchTerm, level, maxDepth, onUserC
     return 'total_atla' in n || 'referral_type' in n
   }
 
+  // Get assigned sellers from the node
+  const assignedSellers: SellerInfo[] = node.assigned_sellers || []
+  const hasSellers = assignedSellers.length > 0
+
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (hasChildren) {
@@ -129,6 +133,12 @@ function TreeNodeComponent({ node, variant, searchTerm, level, maxDepth, onUserC
           {childrenCount > 0 && (
             <Badge variant="secondary" className="text-xs">
               👥 {childrenCount}
+            </Badge>
+          )}
+          {hasSellers && (
+            <Badge variant="outline" className="text-xs bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400">
+              <UserCheck className="w-3 h-3 mr-1" />
+              {assignedSellers.map(s => s.seller_name).join(', ')}
             </Badge>
           )}
         </div>

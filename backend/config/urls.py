@@ -19,6 +19,7 @@ urlpatterns = [
     
     # API endpoints
     path('api/v1/users/', include('apps.users.urls', namespace='users')),
+    path('api/v1/core/', include('apps.core.urls', namespace='core')),
     path('api/v1/limitless/', include('apps.limitless.urls', namespace='limitless')),
     path('api/v1/boostyfi/', include('apps.boostyfi.urls', namespace='boostyfi')),
 ]

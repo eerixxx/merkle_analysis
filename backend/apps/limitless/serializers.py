@@ -5,6 +5,7 @@ from rest_framework import serializers
 from django.db.models import Sum, Count, Q
 
 from .models import LimitlessUser, LimitlessPurchase, LimitlessEarning, WalletProfile
+from apps.core.models import SellerAssignment
 
 
 class LimitlessPurchaseSerializer(serializers.ModelSerializer):
@@ -78,6 +79,7 @@ class LimitlessUserDetailSerializer(serializers.ModelSerializer):
     purchases = LimitlessPurchaseSerializer(many=True, read_only=True)
     recent_earnings = serializers.SerializerMethodField()
     earnings_by_type = serializers.SerializerMethodField()
+    assigned_sellers = serializers.SerializerMethodField()
     
     class Meta:
         model = LimitlessUser
@@ -87,7 +89,7 @@ class LimitlessUserDetailSerializer(serializers.ModelSerializer):
             'date_joined', 'created_at', 'parent_username',
             'children_count', 'team_size', 'purchases_count', 'pending_purchases_count',
             'direct_volume', 'team_volume', 'total_earnings', 'pending_earnings',
-            'purchases', 'recent_earnings', 'earnings_by_type'
+            'purchases', 'recent_earnings', 'earnings_by_type', 'assigned_sellers'
         ]
     
     def get_children_count(self, obj):
@@ -138,6 +140,9 @@ class LimitlessUserDetailSerializer(serializers.ModelSerializer):
             count=Count('id'),
             total=Sum('amount_usdt')
         ))
+    
+    def get_assigned_sellers(self, obj):
+        return SellerAssignment.get_seller_names_for_user('limitless', obj.id)
 
 
 class LimitlessUserTreeSerializer(serializers.ModelSerializer):
@@ -147,13 +152,14 @@ class LimitlessUserTreeSerializer(serializers.ModelSerializer):
     direct_volume = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True, default=0)
     total_earnings = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True, default=0)
     children_count = serializers.IntegerField(read_only=True, default=0)
+    assigned_sellers = serializers.SerializerMethodField()
     
     class Meta:
         model = LimitlessUser
         fields = [
             'id', 'original_id', 'username', 'wallet', 'is_active',
             'children_count', 'purchases_count', 'direct_volume',
-            'total_earnings', 'children'
+            'total_earnings', 'children', 'assigned_sellers'
         ]
     
     def get_children(self, obj):
@@ -173,6 +179,9 @@ class LimitlessUserTreeSerializer(serializers.ModelSerializer):
                 'current_depth': current_depth + 1
             }
         ).data
+    
+    def get_assigned_sellers(self, obj):
+        return SellerAssignment.get_seller_names_for_user('limitless', obj.id)
 
 
 class LimitlessStatsSerializer(serializers.Serializer):

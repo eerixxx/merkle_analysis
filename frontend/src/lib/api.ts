@@ -10,6 +10,10 @@ import type {
   RootsResponse,
   SearchResponse,
   AncestorsResponse,
+  WalletProfile,
+  SellerAssignment,
+  SellerInfo,
+  CurrentUser,
 } from '@/types'
 
 // Create axios instance
@@ -87,6 +91,16 @@ export const limitlessApi = {
     const { data } = await api.get(`/limitless/users/${id}/ancestors/`)
     return data
   },
+
+  // Wallet Profile (from rank export)
+  getWalletProfile: async (walletAddress: string): Promise<WalletProfile | null> => {
+    try {
+      const { data } = await api.get(`/limitless/wallet-profiles/wallet/${walletAddress}/`)
+      return data
+    } catch {
+      return null
+    }
+  },
 }
 
 // BoostyFi API
@@ -154,9 +168,58 @@ export const authApi = {
     localStorage.removeItem('refresh_token')
   },
 
-  getCurrentUser: async () => {
+  getCurrentUser: async (): Promise<CurrentUser> => {
     const { data } = await api.get('/users/me/')
     return data
+  },
+
+  isAuthenticated: () => {
+    return !!localStorage.getItem('access_token')
+  },
+}
+
+// Seller Assignment API
+export const sellerApi = {
+  // Claim a wallet
+  claim: async (platform: 'limitless' | 'boostyfi', targetUserId: number, notes = ''): Promise<SellerAssignment> => {
+    const { data } = await api.post('/core/seller-assignments/claim/', {
+      platform,
+      target_user_id: targetUserId,
+      notes,
+    })
+    return data
+  },
+
+  // Unclaim a wallet
+  unclaim: async (platform: 'limitless' | 'boostyfi', targetUserId: number): Promise<void> => {
+    await api.post('/core/seller-assignments/unclaim/', {
+      platform,
+      target_user_id: targetUserId,
+    })
+  },
+
+  // Get all assignments for current seller
+  getMyAssignments: async (platform?: 'limitless' | 'boostyfi'): Promise<SellerAssignment[]> => {
+    const params = platform ? { platform } : {}
+    const { data } = await api.get('/core/seller-assignments/my_assignments/', { params })
+    return data
+  },
+
+  // Get sellers for a specific user (public)
+  getSellersForUser: async (platform: 'limitless' | 'boostyfi', targetUserId: number): Promise<SellerInfo[]> => {
+    const { data } = await api.get('/core/seller-assignments/for_user/', {
+      params: { platform, target_user_id: targetUserId },
+    })
+    return data.sellers
+  },
+
+  // Get sellers for multiple users at once (public)
+  getBulkSellers: async (platform: 'limitless' | 'boostyfi', userIds: number[]): Promise<Record<number, SellerInfo[]>> => {
+    if (userIds.length === 0) return {}
+    const { data } = await api.get('/core/seller-assignments/bulk_for_users/', {
+      params: { platform, user_ids: userIds.join(',') },
+    })
+    return data.assignments
   },
 }
 
