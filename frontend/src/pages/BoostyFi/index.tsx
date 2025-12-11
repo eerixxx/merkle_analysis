@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ChevronDown, ChevronUp, Users, DollarSign, TrendingUp, Crown, Coins, ChevronLeft, ChevronRight, Home } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronUp, Users, DollarSign, TrendingUp, Crown, Coins, ChevronLeft, ChevronRight, Home, TreePine, Table } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { StatsPanel } from '@/components/StatsPanel'
 import { HierarchyTree } from '@/components/HierarchyTree'
+import { UserTable } from '@/components/UserTable'
 import { UserDetailsModal } from '@/components/UserDetailsModal'
 import { BlockLoader } from '@/components/BlockLoader'
 import { ModeToggle } from '@/components/mode-toggle'
@@ -13,7 +14,10 @@ import { UserSearch } from '@/components/UserSearch'
 import { boostyfiApi } from '@/lib/api'
 import type { BoostyFiUserTree, BoostyFiStats, BoostyFiUser, RootsResponse, AncestorsResponse } from '@/types'
 
+type ViewMode = 'tree' | 'table'
+
 export function BoostyFiPage() {
+  const [viewMode, setViewMode] = useState<ViewMode>('tree')
   const [expandLevel, setExpandLevel] = useState(0)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [focusedUserId, setFocusedUserId] = useState<number | null>(null)
@@ -92,8 +96,30 @@ export function BoostyFiPage() {
               Back
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-center flex-1">BoostyFi Hierarchy Tree</h1>
+          <h1 className="text-3xl font-bold text-center flex-1">BoostyFi Users</h1>
           <ModeToggle />
+        </div>
+        
+        {/* View Mode Toggle */}
+        <div className="flex justify-center gap-2 mb-6">
+          <Button
+            variant={viewMode === 'tree' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('tree')}
+            className="gap-2"
+          >
+            <TreePine className="w-4 h-4" />
+            Tree View
+          </Button>
+          <Button
+            variant={viewMode === 'table' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('table')}
+            className="gap-2"
+          >
+            <Table className="w-4 h-4" />
+            Table View
+          </Button>
         </div>
         
         {/* Stats */}
@@ -102,113 +128,127 @@ export function BoostyFiPage() {
           isLoading={statsLoading}
         />
         
-        {/* Controls */}
-        <div className="flex flex-wrap gap-2 justify-center mb-6">
-          <Button variant="default" onClick={handleExpandAll} className="gap-1">
-            <ChevronDown className="w-4 h-4" />
-            Expand All
-          </Button>
-          <Button variant="default" onClick={handleCollapseAll} className="gap-1">
-            <ChevronUp className="w-4 h-4" />
-            Collapse All
-          </Button>
-          <Button variant="outline" onClick={() => handleExpandToLevel(1)}>Level 1</Button>
-          <Button variant="outline" onClick={() => handleExpandToLevel(2)}>Level 2</Button>
-          <Button variant="outline" onClick={() => handleExpandToLevel(3)}>Level 3</Button>
-        </div>
-        
-        {/* Search */}
-        <div className="max-w-lg mx-auto mb-6">
-          <UserSearch 
-            variant="boostyfi" 
-            onUserSelect={handleUserSearchSelect}
-          />
-        </div>
-        
-        {/* Focused User Breadcrumb */}
-        {focusedUserId && focusedUserData && (
-          <div className="mb-4 flex items-center gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleClearFocus}
-              className="gap-1"
-            >
-              <Home className="w-4 h-4" />
-              Show All Roots
-            </Button>
-            <span className="text-muted-foreground">|</span>
-            <span className="text-sm text-muted-foreground">Path:</span>
-            {focusedUserData.path.map((user, index) => (
-              <span key={user.id} className="flex items-center gap-1">
+        {viewMode === 'tree' ? (
+          <>
+            {/* Controls */}
+            <div className="flex flex-wrap gap-2 justify-center mb-6">
+              <Button variant="default" onClick={handleExpandAll} className="gap-1">
+                <ChevronDown className="w-4 h-4" />
+                Expand All
+              </Button>
+              <Button variant="default" onClick={handleCollapseAll} className="gap-1">
+                <ChevronUp className="w-4 h-4" />
+                Collapse All
+              </Button>
+              <Button variant="outline" onClick={() => handleExpandToLevel(1)}>Level 1</Button>
+              <Button variant="outline" onClick={() => handleExpandToLevel(2)}>Level 2</Button>
+              <Button variant="outline" onClick={() => handleExpandToLevel(3)}>Level 3</Button>
+            </div>
+            
+            {/* Search */}
+            <div className="max-w-lg mx-auto mb-6">
+              <UserSearch 
+                variant="boostyfi" 
+                onUserSelect={handleUserSearchSelect}
+              />
+            </div>
+            
+            {/* Focused User Breadcrumb */}
+            {focusedUserId && focusedUserData && (
+              <div className="mb-4 flex items-center gap-2 flex-wrap">
                 <Button
-                  variant={user.id === focusedUserId ? "default" : "ghost"}
+                  variant="outline"
                   size="sm"
-                  onClick={() => setFocusedUserId(user.id)}
-                  className="h-7 px-2 text-xs"
+                  onClick={handleClearFocus}
+                  className="gap-1"
                 >
-                  {user.username}
+                  <Home className="w-4 h-4" />
+                  Show All Roots
                 </Button>
-                {index < focusedUserData.path.length - 1 && (
-                  <span className="text-muted-foreground">→</span>
-                )}
-              </span>
-            ))}
-          </div>
-        )}
-        
-        {/* Tree */}
-        <Card className="bg-card border-border">
-          <CardContent className="p-6 overflow-auto">
-            {isLoading ? (
-              <BlockLoader />
-            ) : focusedUserId && focusedUserTree ? (
-              <HierarchyTree
-                data={[focusedUserTree]}
-                variant="boostyfi"
-                searchTerm=""
-                maxDepth={3}
-                onUserClick={(userId) => setSelectedUserId(userId)}
-              />
-            ) : rootUsers && rootUsers.length > 0 ? (
-              <HierarchyTree
-                data={rootUsers}
-                variant="boostyfi"
-                searchTerm=""
-                maxDepth={expandLevel}
-                onUserClick={(userId) => setSelectedUserId(userId)}
-              />
-            ) : (
-              <div className="text-center py-12 text-destructive">No root users found</div>
+                <span className="text-muted-foreground">|</span>
+                <span className="text-sm text-muted-foreground">Path:</span>
+                {focusedUserData.path.map((user, index) => (
+                  <span key={user.id} className="flex items-center gap-1">
+                    <Button
+                      variant={user.id === focusedUserId ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setFocusedUserId(user.id)}
+                      className="h-7 px-2 text-xs"
+                    >
+                      {user.username}
+                    </Button>
+                    {index < focusedUserData.path.length - 1 && (
+                      <span className="text-muted-foreground">→</span>
+                    )}
+                  </span>
+                ))}
+              </div>
             )}
-          </CardContent>
-        </Card>
-        
-        {/* Pagination - only when showing all roots */}
-        {!focusedUserId && totalRoots > limit && (
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setOffset(Math.max(0, offset - limit))}
-              disabled={offset === 0 || treeLoading}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages} ({totalRoots} root users)
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setOffset(offset + limit)}
-              disabled={!hasMore || treeLoading}
-            >
-              Next
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
+            
+            {/* Tree */}
+            <Card className="bg-card border-border">
+              <CardContent className="p-6 overflow-auto">
+                {isLoading ? (
+                  <BlockLoader />
+                ) : focusedUserId && focusedUserTree ? (
+                  <HierarchyTree
+                    data={[focusedUserTree]}
+                    variant="boostyfi"
+                    searchTerm=""
+                    maxDepth={3}
+                    onUserClick={(userId) => setSelectedUserId(userId)}
+                  />
+                ) : rootUsers && rootUsers.length > 0 ? (
+                  <HierarchyTree
+                    data={rootUsers}
+                    variant="boostyfi"
+                    searchTerm=""
+                    maxDepth={expandLevel}
+                    onUserClick={(userId) => setSelectedUserId(userId)}
+                  />
+                ) : (
+                  <div className="text-center py-12 text-destructive">No root users found</div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Pagination - only when showing all roots */}
+            {!focusedUserId && totalRoots > limit && (
+              <div className="flex items-center justify-center gap-4 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(Math.max(0, offset - limit))}
+                  disabled={offset === 0 || treeLoading}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages} ({totalRoots} root users)
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(offset + limit)}
+                  disabled={!hasMore || treeLoading}
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          /* Table View */
+          <Card className="bg-card border-border">
+            <CardContent className="p-6">
+              <UserTable 
+                variant="boostyfi" 
+                onUserClick={(userId) => setSelectedUserId(userId)} 
+              />
+            </CardContent>
+          </Card>
         )}
         
         {/* User Details Modal */}

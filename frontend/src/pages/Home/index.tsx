@@ -14,7 +14,7 @@ export function HomePage() {
       
       <div className="text-center max-w-4xl">
         <h1 className="text-5xl font-bold text-foreground mb-4">
-          Hierarchy Viewer
+          Merkle Viewer
         </h1>
         <p className="text-muted-foreground text-lg mb-12">
           Choose a project to explore its user hierarchy tree
@@ -93,7 +93,7 @@ export function HomePage() {
         </div>
         
         <footer className="mt-16 text-muted-foreground text-sm">
-          Hierarchy Viewer v2.0 - React + Django
+          ATOM Merkle Viewer v.0.12 - alpha
         </footer>
       </div>
     </div>
