@@ -652,10 +652,8 @@
                     <span class="node-username">${displayName}</span>
                     <span class="node-wallet">${shortWallet}</span>
                     <div class="node-badges">
-                        ${user.purchases.length > 0 ? `<span class="badge purchases">💰 ${user.purchases.length}</span>` : ''}
-                        ${user.directVolume > 0 ? `<span class="badge purchases">$${user.directVolume.toFixed(0)}</span>` : ''}
                         <span class="badge team-volume">📊 $${user.teamVolume.toFixed(0)}</span>
-                        ${user.totalEarnings > 0 ? `<span class="badge earnings">💵 $${user.totalEarnings.toFixed(0)}</span>` : ''}
+                        ${user.directVolume > 0 ? `<span class="badge purchases">💰 $${user.directVolume.toFixed(0)}</span>` : ''}
                         ${hasChildren ? `<span class="badge children">👥 ${user.children.length}</span>` : ''}
                     </div>
                 </div>

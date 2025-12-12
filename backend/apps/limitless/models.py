@@ -3,7 +3,7 @@ Limitless models for users, purchases, and earnings.
 """
 from decimal import Decimal
 from django.db import models
-from django.db.models import Count, Sum, Q, Value, DecimalField
+from django.db.models import Count, Sum, Q, Value, DecimalField, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from mptt.models import MPTTModel, TreeForeignKey
 from mptt.managers import TreeManager
@@ -15,20 +15,39 @@ class LimitlessUserQuerySet(models.QuerySet):
     """Custom QuerySet with tree field annotations."""
     
     def annotate_tree_fields(self):
-        """Add computed fields for tree display in a single query."""
+        """Add computed fields for tree display using subqueries to avoid JOIN multiplication."""
+        from .models import LimitlessPurchase, LimitlessEarning
+        
+        # Subquery for purchases count
+        purchases_count_sq = LimitlessPurchase.objects.filter(
+            buyer=OuterRef('pk'),
+            payment_status='COMPLETED'
+        ).values('buyer').annotate(cnt=Count('id')).values('cnt')
+        
+        # Subquery for direct volume
+        direct_volume_sq = LimitlessPurchase.objects.filter(
+            buyer=OuterRef('pk'),
+            payment_status='COMPLETED'
+        ).values('buyer').annotate(total=Sum('amount_usdt')).values('total')
+        
+        # Subquery for total earnings
+        total_earnings_sq = LimitlessEarning.objects.filter(
+            recipient=OuterRef('pk'),
+            status='WITHDRAWN'
+        ).values('recipient').annotate(total=Sum('amount_usdt')).values('total')
+        
         return self.annotate(
             children_count=Count('children', distinct=True),
-            purchases_count=Count(
-                'purchases',
-                filter=Q(purchases__payment_status='COMPLETED'),
-                distinct=True
+            purchases_count=Coalesce(
+                Subquery(purchases_count_sq),
+                Value(0)
             ),
             direct_volume=Coalesce(
-                Sum('purchases__amount_usdt', filter=Q(purchases__payment_status='COMPLETED')),
+                Subquery(direct_volume_sq),
                 Value(Decimal('0'), output_field=DecimalField(max_digits=20, decimal_places=2))
             ),
             total_earnings=Coalesce(
-                Sum('earnings__amount_usdt', filter=Q(earnings__status='WITHDRAWN')),
+                Subquery(total_earnings_sq),
                 Value(Decimal('0'), output_field=DecimalField(max_digits=20, decimal_places=2))
             )
         )

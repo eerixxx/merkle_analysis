@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
 import { cn, shortWallet } from '@/lib/utils'
-import { Loader2, UserCheck, ChevronDown, ChevronRight } from 'lucide-react'
+import { Loader2, ChevronDown, ChevronRight } from 'lucide-react'
 import { limitlessApi, boostyfiApi } from '@/lib/api'
-import type { LimitlessUserTree, BoostyFiUserTree, SellerInfo } from '@/types'
+import type { LimitlessUserTree, BoostyFiUserTree } from '@/types'
 import './styles.css'
 
 type TreeNode = LimitlessUserTree | BoostyFiUserTree
@@ -71,14 +71,6 @@ function TreeNodeComponent({ node, variant, searchTerm, level, maxDepth, onUserC
     node.original_id?.toString().includes(searchTerm)
   )
 
-  // Type guard for BoostyFi specific fields
-  const isBoostyFi = (n: TreeNode): n is BoostyFiUserTree => {
-    return 'total_atla' in n || 'referral_type' in n
-  }
-
-  // Get assigned sellers from the node
-  const assignedSellers: SellerInfo[] = node.assigned_sellers || []
-  const hasSellers = assignedSellers.length > 0
 
   const handleToggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -127,40 +119,20 @@ function TreeNodeComponent({ node, variant, searchTerm, level, maxDepth, onUserC
           <span className="node-username">{node.username || `User ${node.original_id}`}</span>
           <span className="node-wallet">{shortWallet(node.wallet)}</span>
           <div className="node-badges">
-            {isBoostyFi(node) && node.referral_type && (
-              <Badge variant="secondary" className="text-xs">
-                🏷️ {node.referral_type}
-              </Badge>
-            )}
-            {node.purchases_count > 0 && (
-              <Badge variant="success" className="text-xs">
-                💰 {node.purchases_count}
-              </Badge>
-            )}
+            {/* Team Contribution - общий объем команды */}
+            <Badge variant="default" className="text-xs">
+              📊 ${Number(node.team_volume || 0).toFixed(0)}
+            </Badge>
+            {/* Purchases - личные покупки */}
             {Number(node.direct_volume) > 0 && (
               <Badge variant="success" className="text-xs">
-                ${Number(node.direct_volume).toFixed(0)}
+                💰 ${Number(node.direct_volume).toFixed(0)}
               </Badge>
             )}
-            {Number(node.total_earnings) > 0 && (
-              <Badge variant="warning" className="text-xs">
-                💵 ${Number(node.total_earnings).toFixed(0)}
-              </Badge>
-            )}
-            {isBoostyFi(node) && Number(node.total_atla) > 0 && (
-              <Badge variant="destructive" className="text-xs">
-                🪙 {Number(node.total_atla).toFixed(2)}
-              </Badge>
-            )}
+            {/* Direct Referrals - количество рефералов */}
             {childrenCount > 0 && (
               <Badge variant="secondary" className="text-xs">
                 👥 {childrenCount}
-              </Badge>
-            )}
-            {hasSellers && (
-              <Badge variant="outline" className="text-xs bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400">
-                <UserCheck className="w-3 h-3 mr-1" />
-                {assignedSellers.map(s => s.seller_name).join(', ')}
               </Badge>
             )}
           </div>

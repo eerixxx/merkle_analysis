@@ -150,6 +150,7 @@ class LimitlessUserTreeSerializer(serializers.ModelSerializer):
     children = serializers.SerializerMethodField()
     purchases_count = serializers.IntegerField(read_only=True, default=0)
     direct_volume = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True, default=0)
+    team_volume = serializers.SerializerMethodField()
     total_earnings = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True, default=0)
     children_count = serializers.IntegerField(read_only=True, default=0)
     tree_size = serializers.IntegerField(read_only=True, default=0)
@@ -160,8 +161,22 @@ class LimitlessUserTreeSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'original_id', 'username', 'wallet', 'is_active',
             'children_count', 'tree_size', 'purchases_count', 'direct_volume',
-            'total_earnings', 'children', 'assigned_sellers'
+            'team_volume', 'total_earnings', 'children', 'assigned_sellers'
         ]
+    
+    def get_team_volume(self, obj):
+        """Calculate total volume from user and all descendants using MPTT."""
+        # Use MPTT lft/rght for efficient descendant query
+        descendants = LimitlessUser.objects.filter(
+            tree_id=obj.tree_id,
+            lft__gte=obj.lft,
+            rght__lte=obj.rght
+        )
+        result = LimitlessPurchase.objects.filter(
+            buyer__in=descendants,
+            payment_status='COMPLETED'
+        ).aggregate(total=Sum('amount_usdt'))
+        return float(result['total'] or 0)
     
     def get_children(self, obj):
         max_depth = self.context.get('max_depth', 0)

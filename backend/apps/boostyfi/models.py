@@ -15,22 +15,39 @@ class BoostyFiUserQuerySet(models.QuerySet):
     """Custom QuerySet with tree field annotations."""
     
     def annotate_tree_fields(self):
-        """Add computed fields for tree display in a single query."""
+        """Add computed fields for tree display using subqueries to avoid JOIN multiplication."""
         from .models import BoostyFiPurchase, BoostyFiEarning
+        
+        # Subquery for purchases count
+        purchases_count_sq = BoostyFiPurchase.objects.filter(
+            buyer=OuterRef('pk'),
+            payment_status='COMPLETED'
+        ).values('buyer').annotate(cnt=Count('id')).values('cnt')
+        
+        # Subquery for direct volume
+        direct_volume_sq = BoostyFiPurchase.objects.filter(
+            buyer=OuterRef('pk'),
+            payment_status='COMPLETED'
+        ).values('buyer').annotate(total=Sum('amount')).values('total')
+        
+        # Subquery for total earnings
+        total_earnings_sq = BoostyFiEarning.objects.filter(
+            user=OuterRef('pk'),
+            status='WITHDRAWN'
+        ).values('user').annotate(total=Sum('amount')).values('total')
         
         return self.annotate(
             children_count=Count('children', distinct=True),
-            purchases_count=Count(
-                'purchases',
-                filter=Q(purchases__payment_status='COMPLETED'),
-                distinct=True
+            purchases_count=Coalesce(
+                Subquery(purchases_count_sq),
+                Value(0)
             ),
             direct_volume=Coalesce(
-                Sum('purchases__amount', filter=Q(purchases__payment_status='COMPLETED')),
+                Subquery(direct_volume_sq),
                 Value(Decimal('0'), output_field=DecimalField(max_digits=20, decimal_places=2))
             ),
             total_earnings=Coalesce(
-                Sum('earnings__amount', filter=Q(earnings__status='WITHDRAWN')),
+                Subquery(total_earnings_sq),
                 Value(Decimal('0'), output_field=DecimalField(max_digits=20, decimal_places=2))
             )
         )

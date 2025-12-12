@@ -665,12 +665,8 @@
                     <span class="node-username">${displayName}</span>
                     <span class="node-wallet">${shortWallet}</span>
                     <div class="node-badges">
-                        ${user.referral_type ? `<span class="badge referral-type">🏷️ ${user.referral_type}</span>` : ''}
-                        ${user.purchases.length > 0 ? `<span class="badge purchases">💰 ${user.purchases.length}</span>` : ''}
-                        ${user.directVolume > 0 ? `<span class="badge purchases">$${user.directVolume.toFixed(0)}</span>` : ''}
                         <span class="badge team-volume">📊 $${user.teamVolume.toFixed(0)}</span>
-                        ${user.totalEarnings > 0 ? `<span class="badge earnings">💵 $${user.totalEarnings.toFixed(0)}</span>` : ''}
-                        ${totalAtla > 0 ? `<span class="badge atla">🪙 ${totalAtla.toFixed(2)}</span>` : ''}
+                        ${user.directVolume > 0 ? `<span class="badge purchases">💰 $${user.directVolume.toFixed(0)}</span>` : ''}
                         ${hasChildren ? `<span class="badge children">👥 ${user.children.length}</span>` : ''}
                     </div>
                 </div>

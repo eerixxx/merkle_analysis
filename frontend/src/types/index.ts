@@ -18,7 +18,7 @@ export interface LimitlessUser {
   purchases_count: number
   pending_purchases_count?: number
   direct_volume: number
-  team_volume?: number
+  team_volume: number
   total_earnings: number
   pending_earnings?: number
   purchases?: LimitlessPurchase[]
@@ -80,7 +80,7 @@ export interface BoostyFiUser {
   purchases_count: number
   pending_purchases_count?: number
   direct_volume: number
-  team_volume?: number
+  team_volume: number
   total_earnings: number
   pending_earnings?: number
   purchases?: BoostyFiPurchase[]
