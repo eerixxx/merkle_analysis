@@ -117,7 +117,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f"File not found: {filepath}"))
             return []
         
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, 'r', encoding='utf-8-sig') as f:  # utf-8-sig handles BOM
             reader = csv.DictReader(f)
             return list(reader)
 

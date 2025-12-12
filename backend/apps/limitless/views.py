@@ -1,7 +1,7 @@
 """
 API Views for Limitless.
 """
-from django.db.models import Sum, Count, Q, Case, When, Value, IntegerField
+from django.db.models import Sum, Count, Q, Case, When, Value, IntegerField, F, ExpressionWrapper
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -60,8 +60,14 @@ class LimitlessUserViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=False, methods=['get'])
     def roots(self, request):
-        """Get root users (users without parents) with pagination."""
-        roots = self.queryset.filter(parent__isnull=True).annotate_tree_fields().order_by('original_id')
+        """Get root users (users without parents) with pagination, sorted by tree size descending."""
+        # Annotate with tree_size using MPTT lft/rght: (rght - lft - 1) / 2 = number of descendants
+        roots = self.queryset.filter(parent__isnull=True).annotate_tree_fields().annotate(
+            tree_size=ExpressionWrapper(
+                (F('rght') - F('lft') - 1) / 2,
+                output_field=IntegerField()
+            )
+        ).order_by('-tree_size', 'original_id')  # Sort by tree size descending, then by original_id
         max_depth = int(request.query_params.get('depth', 0))  # Default 0 - no children
         
         # Pagination parameters

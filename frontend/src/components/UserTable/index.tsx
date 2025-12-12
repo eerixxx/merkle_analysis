@@ -304,3 +304,5 @@ export function UserTable({ variant, onUserClick }: UserTableProps) {
     </div>
   )
 }
+
+

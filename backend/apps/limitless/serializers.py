@@ -152,13 +152,14 @@ class LimitlessUserTreeSerializer(serializers.ModelSerializer):
     direct_volume = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True, default=0)
     total_earnings = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True, default=0)
     children_count = serializers.IntegerField(read_only=True, default=0)
+    tree_size = serializers.IntegerField(read_only=True, default=0)
     assigned_sellers = serializers.SerializerMethodField()
     
     class Meta:
         model = LimitlessUser
         fields = [
             'id', 'original_id', 'username', 'wallet', 'is_active',
-            'children_count', 'purchases_count', 'direct_volume',
+            'children_count', 'tree_size', 'purchases_count', 'direct_volume',
             'total_earnings', 'children', 'assigned_sellers'
         ]
     

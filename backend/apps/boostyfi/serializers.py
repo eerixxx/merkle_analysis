@@ -167,6 +167,7 @@ class BoostyFiUserTreeSerializer(serializers.ModelSerializer):
     direct_volume = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True, default=0)
     total_earnings = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True, default=0)
     children_count = serializers.IntegerField(read_only=True, default=0)
+    tree_size = serializers.IntegerField(read_only=True, default=0)
     total_atla = serializers.ReadOnlyField()
     assigned_sellers = serializers.SerializerMethodField()
     
@@ -174,7 +175,7 @@ class BoostyFiUserTreeSerializer(serializers.ModelSerializer):
         model = BoostyFiUser
         fields = [
             'id', 'original_id', 'username', 'wallet', 'referral_type',
-            'is_active', 'children_count', 'purchases_count', 'direct_volume',
+            'is_active', 'children_count', 'tree_size', 'purchases_count', 'direct_volume',
             'total_earnings', 'total_atla', 'children', 'assigned_sellers'
         ]
     

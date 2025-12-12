@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
 import { cn, shortWallet } from '@/lib/utils'
-import { Loader2, UserCheck } from 'lucide-react'
+import { Loader2, UserCheck, ChevronDown, ChevronRight } from 'lucide-react'
 import { limitlessApi, boostyfiApi } from '@/lib/api'
 import type { LimitlessUserTree, BoostyFiUserTree, SellerInfo } from '@/types'
 import './styles.css'
@@ -80,11 +80,15 @@ function TreeNodeComponent({ node, variant, searchTerm, level, maxDepth, onUserC
   const assignedSellers: SellerInfo[] = node.assigned_sellers || []
   const hasSellers = assignedSellers.length > 0
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleToggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (hasChildren) {
       setIsExpanded(!isExpanded)
     }
+  }
+
+  const handleNodeClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     if (onUserClick) {
       onUserClick(node.id)
     }
@@ -93,7 +97,6 @@ function TreeNodeComponent({ node, variant, searchTerm, level, maxDepth, onUserC
   return (
     <li>
       <div
-        onClick={handleClick}
         className={cn(
           'node-box',
           hasChildren && 'has-children',
@@ -102,70 +105,82 @@ function TreeNodeComponent({ node, variant, searchTerm, level, maxDepth, onUserC
         )}
         data-level={level}
       >
-        <span className="node-username">{node.username || `User ${node.original_id}`}</span>
-        <span className="node-wallet">{shortWallet(node.wallet)}</span>
-        <div className="node-badges">
-          {isBoostyFi(node) && node.referral_type && (
-            <Badge variant="secondary" className="text-xs">
-              🏷️ {node.referral_type}
-            </Badge>
-          )}
-          {node.purchases_count > 0 && (
-            <Badge variant="success" className="text-xs">
-              💰 {node.purchases_count}
-            </Badge>
-          )}
-          {Number(node.direct_volume) > 0 && (
-            <Badge variant="success" className="text-xs">
-              ${Number(node.direct_volume).toFixed(0)}
-            </Badge>
-          )}
-          {Number(node.total_earnings) > 0 && (
-            <Badge variant="warning" className="text-xs">
-              💵 ${Number(node.total_earnings).toFixed(0)}
-            </Badge>
-          )}
-          {isBoostyFi(node) && Number(node.total_atla) > 0 && (
-            <Badge variant="destructive" className="text-xs">
-              🪙 {Number(node.total_atla).toFixed(2)}
-            </Badge>
-          )}
-          {childrenCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              👥 {childrenCount}
-            </Badge>
-          )}
-          {hasSellers && (
-            <Badge variant="outline" className="text-xs bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400">
-              <UserCheck className="w-3 h-3 mr-1" />
-              {assignedSellers.map(s => s.seller_name).join(', ')}
-            </Badge>
-          )}
+        {/* Expand/Collapse button */}
+        {hasChildren && (
+          <button
+            onClick={handleToggleExpand}
+            className="expand-toggle-btn"
+            title={isExpanded ? 'Свернуть' : 'Развернуть'}
+          >
+            {childrenLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isExpanded ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </button>
+        )}
+        
+        {/* Clickable node content */}
+        <div className="node-content" onClick={handleNodeClick}>
+          <span className="node-username">{node.username || `User ${node.original_id}`}</span>
+          <span className="node-wallet">{shortWallet(node.wallet)}</span>
+          <div className="node-badges">
+            {isBoostyFi(node) && node.referral_type && (
+              <Badge variant="secondary" className="text-xs">
+                🏷️ {node.referral_type}
+              </Badge>
+            )}
+            {node.purchases_count > 0 && (
+              <Badge variant="success" className="text-xs">
+                💰 {node.purchases_count}
+              </Badge>
+            )}
+            {Number(node.direct_volume) > 0 && (
+              <Badge variant="success" className="text-xs">
+                ${Number(node.direct_volume).toFixed(0)}
+              </Badge>
+            )}
+            {Number(node.total_earnings) > 0 && (
+              <Badge variant="warning" className="text-xs">
+                💵 ${Number(node.total_earnings).toFixed(0)}
+              </Badge>
+            )}
+            {isBoostyFi(node) && Number(node.total_atla) > 0 && (
+              <Badge variant="destructive" className="text-xs">
+                🪙 {Number(node.total_atla).toFixed(2)}
+              </Badge>
+            )}
+            {childrenCount > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                👥 {childrenCount}
+              </Badge>
+            )}
+            {hasSellers && (
+              <Badge variant="outline" className="text-xs bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400">
+                <UserCheck className="w-3 h-3 mr-1" />
+                {assignedSellers.map(s => s.seller_name).join(', ')}
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Children */}
-      {hasChildren && (
-        <ul className="children-list" style={{ display: isExpanded ? 'table' : 'none' }}>
-          {childrenLoading ? (
-            <li>
-              <div className="node-box loading-node">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            </li>
-          ) : (
-            loadedChildren.map((child) => (
-              <TreeNodeComponent
-                key={child.id}
-                node={child}
-                variant={variant}
-                searchTerm={searchTerm}
-                level={level + 1}
-                maxDepth={maxDepth}
-                onUserClick={onUserClick}
-              />
-            ))
-          )}
+      {hasChildren && isExpanded && !childrenLoading && loadedChildren.length > 0 && (
+        <ul className="children-list">
+          {loadedChildren.map((child) => (
+            <TreeNodeComponent
+              key={child.id}
+              node={child}
+              variant={variant}
+              searchTerm={searchTerm}
+              level={level + 1}
+              maxDepth={maxDepth}
+              onUserClick={onUserClick}
+            />
+          ))}
         </ul>
       )}
     </li>
