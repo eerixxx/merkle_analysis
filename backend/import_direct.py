@@ -20,6 +20,8 @@ def parse_datetime(value):
     formats = [
         '%Y-%m-%dT%H:%M:%S.%f%z',
         '%Y-%m-%dT%H:%M:%S%z',
+        '%Y-%m-%d %H:%M:%S.%f %z',
+        '%Y-%m-%d %H:%M:%S %z',
     ]
     for fmt in formats:
         try:
@@ -59,7 +61,7 @@ print("Done clearing.")
 
 # Import users
 print("Importing users...")
-users_data = read_csv('./sheets/limitless/limitless_users.csv')
+users_data = read_csv('./limitless_new_data/jggl_users_202512131646.csv')
 print(f"Found {len(users_data)} users")
 
 user_map = {}
@@ -136,7 +138,7 @@ print("Done with users.")
 
 # Import purchases
 print("Importing purchases...")
-purchases_data = read_csv('./sheets/limitless/limitless_purchases.csv')
+purchases_data = read_csv('./limitless_new_data/jggl_purchases_202512131646.csv')
 print(f"Found {len(purchases_data)} purchases")
 
 purchase_map = {}
@@ -189,7 +191,7 @@ print(f"Created {len(purchase_map)} purchases")
 
 # Import earnings
 print("Importing earnings...")
-earnings_data = read_csv('./sheets/limitless/limitless_referral_earnings.csv')
+earnings_data = read_csv('./limitless_new_data/jggl_ref_earnings_202512131646.csv')
 print(f"Found {len(earnings_data)} earnings")
 
 earnings_count = 0

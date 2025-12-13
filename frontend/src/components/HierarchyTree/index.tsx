@@ -135,6 +135,12 @@ function TreeNodeComponent({ node, variant, searchTerm, level, maxDepth, onUserC
                 👥 {childrenCount}
               </Badge>
             )}
+            {/* Assigned Sellers - селлеры, управляющие этим кошельком */}
+            {node.assigned_sellers && node.assigned_sellers.length > 0 && (
+              <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
+                🏷️ {node.assigned_sellers.map(s => s.seller_name).join(', ')}
+              </Badge>
+            )}
           </div>
         </div>
       </div>

@@ -10,6 +10,12 @@ class User(AbstractUser):
     Custom user model for admin authentication.
     """
     email = models.EmailField(unique=True, blank=True, null=True)
+    
+    def save(self, *args, **kwargs):
+        # Convert empty email to None for unique constraint to work properly
+        if self.email == '':
+            self.email = None
+        super().save(*args, **kwargs)
     full_name = models.CharField(max_length=255, blank=True, verbose_name='Full Name')
     is_seller = models.BooleanField(default=False, verbose_name='Seller')
     
